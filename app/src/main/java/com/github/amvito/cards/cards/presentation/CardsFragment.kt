@@ -5,10 +5,11 @@ import android.view.View
 import com.github.amvito.cards.R
 import com.github.amvito.cards.core.BaseFragment
 import com.github.amvito.cards.databinding.CardFragmentBinding
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class CardsFragment : BaseFragment<CardsViewModel>() {
+class CardsFragment : BaseFragment() {
 
-    override val viewModelClass: Class<CardsViewModel> = CardsViewModel::class.java
+    private val viewModel: CardsViewModel by viewModel<CardsViewModel>()
     override val layoutId: Int = R.layout.card_fragment
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

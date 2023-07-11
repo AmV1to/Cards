@@ -12,6 +12,7 @@ import com.github.amvito.cards.core.Navigation
 import com.github.amvito.cards.core.NavigationCommunication
 import com.github.amvito.cards.core.RunAsync
 import com.github.amvito.cards.core.Screen
+import com.github.amvito.cards.details.presentation.CardUiCommunication
 
 class CardsViewModel(
     runAsync: RunAsync,
@@ -19,7 +20,7 @@ class CardsViewModel(
     private val cardsInteractor: CardsInteractor,
     private val cardsUiStateCommunication: CardsUiStateCommunication,
     private val mapper: CardsResult.Mapper<CardUiState> = CardResultMapper(),
-    private val detailsCommunication: Communication.Put<CardUi>,
+    private val detailsCommunication: CardUiCommunication,
     private val navigationCommunication: NavigationCommunication.Mutable,
 ) : BaseViewModel(runAsync) {
 
