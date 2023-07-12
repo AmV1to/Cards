@@ -18,7 +18,7 @@ interface RunAsync {
             block: suspend () -> T,
             ui: (T) -> Unit
         ) {
-            scope.launch {
+            scope.launch(dispatchersList.io()) {
                 val result = block.invoke()
                 withContext(dispatchersList.ui()) {
                     ui.invoke(result)
