@@ -11,9 +11,8 @@ interface HandleException<T> {
         private val manageResources: ManageResources
     ) : HandleException<String> {
         override fun handle(e: Exception): String {
-            return manageResources.string(when(e) {
-                else -> R.string.something_went_wrong
-            })
+            val id = R.string.something_went_wrong
+            return manageResources.string(id)
         }
     }
 
