@@ -27,25 +27,24 @@ class CardsInteractorTest {
 
     @Test
     fun test_get_cards_success() = runBlocking {
-        // get cards repository
-        // if success return listofcards data
-        // else throw exception and handle thisOne
 
         val result = cardsInteractor.getCards(1)
 
-        assertEquals(CardsResult.Success(listOf(CardDomain("a", "a", "a","a"))), result)
+        assertEquals(CardsResult.Success(listOf(CardDomain("MasterCard",
+            "2405579232388124",
+            "04/26",
+            "Al Bernhard"))), result)
         assertEquals(1, fakeCardsRepository.calledCount)
     }
 
     @Test
-    fun test_get_cards_fail() = runBlocking {
+    fun test_get_cards_fail_no_internet_connection() = runBlocking {
         fakeCardsRepository.exception = false
         val result = cardsInteractor.getCards(1)
-        // check handle exception was caleed
 
         assertEquals(1, fakeCardsRepository.calledCount)
         assertEquals(1, fakeException.calledCount)
-        assertEquals(CardsResult.Fail("a"), result)
+        assertEquals(CardsResult.Fail("No internet connection"), result)
     }
 
 }
@@ -68,9 +67,12 @@ private class FakeCardsRepository : CardsRepository {
     override suspend fun getCards(cardsCount: Int): List<CardData> {
         calledCount++
         if (exception) {
-            return listOf(CardData("a", "a", "a", "a"))
+            return listOf(CardData("MasterCard",
+                "2405579232388124",
+                "04/26",
+                "Al Bernhard"))
         } else {
-            throw IllegalStateException("a")
+            throw NoInternetConnection()
         }
     }
 }
