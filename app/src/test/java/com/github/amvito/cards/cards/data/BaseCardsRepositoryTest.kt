@@ -2,7 +2,9 @@ package com.github.amvito.cards.cards.data
 
 import com.github.amvito.cards.cards.data.cloud.CardCloud
 import com.github.amvito.cards.cards.data.cloud.CardCloudDataSource
+import com.github.amvito.cards.core.CardException
 import com.github.amvito.cards.core.HandleException
+import com.github.amvito.cards.core.NoInternetConnection
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
@@ -37,19 +39,21 @@ class BaseCardsRepositoryTest {
             "Al Bernhard")))
     }
 
-    @Test(expected = UnknownHostException::class)
+    @Test(expected = NoInternetConnection::class)
     fun test_fetch_cards_fail_no_internet_connection(): Unit = runBlocking {
         cloudDataSource.exception = true
+        handleException.cardException = NoInternetConnection()
         repository.getCards(1)
         assertEquals(1, handleException.calledCount)
     }
 }
 
-private class FakeHandleException : HandleException<Exception> {
+private class FakeHandleException : HandleException<CardException> {
     var calledCount = 0
-    override fun handle(e: Exception): Exception {
+    var cardException: CardException? = null
+    override fun handle(e: Exception): CardException {
         calledCount++
-        return e
+        return cardException!!
     }
 }
 
