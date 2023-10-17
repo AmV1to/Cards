@@ -1,6 +1,7 @@
 package com.github.amvito.cards.core
 
 import com.github.amvito.cards.R
+import com.github.amvito.cards.cards.data.cloud.ResourceNotFound
 import kotlin.Exception
 
 interface HandleException<T> {
@@ -11,21 +12,20 @@ interface HandleException<T> {
         private val manageResources: ManageResources
     ) : HandleException<String> {
         override fun handle(e: Exception): String {
-            val id = R.string.something_went_wrong
-            return manageResources.string(id)
+            return manageResources.string(
+                when (e) {
+                    is NoInternetConnection -> R.string.no_internet_connection
+                    is ResourceNotFound -> R.string.resource_not_found
+                    else -> R.string.something_went_wrong
+                }
+            )
         }
     }
-
-    class ThrowException : HandleException<Exception> {
-        override fun handle(e: Exception): Exception {
-            return when(e) {
-                else -> SomethingWentWrong()
-            }
-        }
-    }
-
 }
+
 
 abstract class CardException : Exception()
 
 class SomethingWentWrong : CardException()
+
+class NoInternetConnection : CardException()
