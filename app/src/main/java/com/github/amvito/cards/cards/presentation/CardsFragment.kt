@@ -32,12 +32,14 @@ class CardsFragment : BaseFragment<CardsViewModel>() {
         }
 
         viewModel.observeState(this) {
-            it.map(CardUiState.Mapper.CardUiStateMapper(adapter, binding))
+            it.apply(binding, adapter)
         }
 
         binding.tryAgainButton.setOnClickListener {
-            viewModel.tryAgain(binding.cardsCountEditText.text
-                .toString().toInt())
+            viewModel.tryAgain(
+                binding.cardsCountEditText.text
+                    .toString().toInt()
+            )
         }
 
         viewModel.observeProgress(this) {

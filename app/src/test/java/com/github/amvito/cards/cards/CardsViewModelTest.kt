@@ -7,8 +7,10 @@ import com.github.amvito.cards.cards.domain.CardsInteractor
 import com.github.amvito.cards.cards.domain.CardsResult
 import com.github.amvito.cards.cards.presentation.CardUi
 import com.github.amvito.cards.cards.presentation.CardUiState
+import com.github.amvito.cards.cards.presentation.CardsCommunication
 import com.github.amvito.cards.cards.presentation.CardsUiStateCommunication
 import com.github.amvito.cards.cards.presentation.CardsViewModel
+import com.github.amvito.cards.cards.presentation.HandleFetchCards
 import com.github.amvito.cards.cards.presentation.ProgressCommunication
 import com.github.amvito.cards.core.Communication
 import com.github.amvito.cards.core.Navigation
@@ -26,6 +28,7 @@ class CardsViewModelTest : BaseTest() {
     private lateinit var uiStateCommunication: FakeCardsStateUiCommunication
     private lateinit var fakeNavigation: FakeNavigation
     private lateinit var fakeDetails: FakeDetails
+    private lateinit var handleFetchCards: HandleFetchCards
 
     @Before
     fun init() {
@@ -34,13 +37,20 @@ class CardsViewModelTest : BaseTest() {
         uiStateCommunication = FakeCardsStateUiCommunication()
         fakeNavigation = FakeNavigation()
         fakeDetails = FakeDetails()
-        viewModel = CardsViewModel(
-            FakeRunAsync(),
+        val cardsCommunication = CardsCommunication.Base(
             progressCommunication,
-            fakeInteractor,
             uiStateCommunication,
-            navigationCommunication = fakeNavigation,
-            detailsCommunication = fakeDetails
+            fakeDetails,
+            fakeNavigation
+        )
+        handleFetchCards = HandleFetchCards.Base(
+            cardsInteractor = fakeInteractor,
+            cardsCommunication = cardsCommunication,
+        )
+        viewModel = CardsViewModel(
+            runAsync = FakeRunAsync(),
+            handleFetchCards = handleFetchCards,
+            cardsCommunication
         )
     }
 
