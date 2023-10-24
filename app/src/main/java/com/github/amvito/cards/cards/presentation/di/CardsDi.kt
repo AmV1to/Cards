@@ -1,50 +1,53 @@
 package com.github.amvito.cards.cards.presentation.di
 
+import com.github.amvito.cards.cards.presentation.CardsCommunication
 import com.github.amvito.cards.cards.presentation.CardsUiStateCommunication
 import com.github.amvito.cards.cards.presentation.CardsViewModel
+import com.github.amvito.cards.cards.presentation.HandleFetchCards
 import com.github.amvito.cards.cards.presentation.ProgressCommunication
 import com.github.amvito.cards.core.DispatchersList
 import com.github.amvito.cards.core.ManageResources
 import com.github.amvito.cards.core.NavigationCommunication
 import com.github.amvito.cards.core.RunAsync
-import com.github.amvito.cards.details.presentation.CardUiCommunication
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val cardsModule = module {
 
     single<ManageResources> {
-        ManageResources.Base(get())
+        ManageResources.Base(context = get())
     }
 
     single<RunAsync> {
-        RunAsync.Base(DispatchersList.Base())
+        RunAsync.Base(dispatchersList = DispatchersList.Base())
     }
 
-    single<CardUiCommunication> {
-        CardUiCommunication.Base()
+    single<CardsCommunication> {
+        CardsCommunication.Base(
+            progressCommunication = ProgressCommunication.Base(),
+            cardsUiStateCommunication = CardsUiStateCommunication.Base(),
+            detailsCommunication = get(named("detailsCommunication")),
+            navigationCommunication = get(named("navigationCommunication")),
+        )
     }
 
-    single<NavigationCommunication.Mutable> {
+    single<NavigationCommunication.Mutable>(named("navigationCommunication")) {
         NavigationCommunication.Base()
     }
 
-    factory<ProgressCommunication> {
-        ProgressCommunication.Base()
-    }
-
-    factory<CardsUiStateCommunication> {
-        CardsUiStateCommunication.Base()
+    factory<HandleFetchCards> {
+        HandleFetchCards.Base(
+            cardsInteractor = get(),
+            cardsCommunication = get(),
+        )
     }
 
     viewModel<CardsViewModel> {
         CardsViewModel(
             runAsync = get(),
-            progressCommunication = get(),
-            cardsInteractor = get(),
-            cardsUiStateCommunication = get(),
-            detailsCommunication = get(),
-            navigationCommunication = get()
+            handleFetchCards = get(),
+            cardsCommunication = get()
         )
     }
 }

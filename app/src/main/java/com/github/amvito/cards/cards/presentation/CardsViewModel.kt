@@ -1,74 +1,28 @@
 package com.github.amvito.cards.cards.presentation
 
-import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.github.amvito.cards.cards.domain.CardDomain
-import com.github.amvito.cards.cards.domain.CardsInteractor
-import com.github.amvito.cards.cards.domain.CardsResult
 import com.github.amvito.cards.core.BaseViewModel
-import com.github.amvito.cards.core.Communication
-import com.github.amvito.cards.core.Navigation
-import com.github.amvito.cards.core.NavigationCommunication
 import com.github.amvito.cards.core.RunAsync
-import com.github.amvito.cards.core.Screen
-import com.github.amvito.cards.details.presentation.CardUiCommunication
 
 class CardsViewModel(
     runAsync: RunAsync,
-    private val progressCommunication: ProgressCommunication,
-    private val cardsInteractor: CardsInteractor,
-    private val cardsUiStateCommunication: CardsUiStateCommunication,
-    private val mapper: CardsResult.Mapper<CardUiState> = CardResultMapper(),
-    private val detailsCommunication: CardUiCommunication,
-    private val navigationCommunication: NavigationCommunication.Mutable,
-) : BaseViewModel(runAsync) {
+    private val handleFetchCards: HandleFetchCards,
+    private val cardsCommunication: CardsCommunication,
+) : BaseViewModel(runAsync), ObserveCards, CardDetails {
 
-    fun fetchCards(cardsCount: Int) {
-        progressCommunication.put(View.VISIBLE)
-        handle({
-            cardsInteractor.getCards(cardsCount)
-        }) {
-            progressCommunication.put(View.GONE)
-            cardsUiStateCommunication.put(it.map(mapper))
-        }
-    }
+    fun fetchCards(cardsCount: Int) = handleFetchCards.fetch(this, cardsCount)
 
-    fun tryAgain(cardsCount: Int) {
-        fetchCards(cardsCount)
-    }
+    fun tryAgain(cardsCount: Int) = handleFetchCards.fetch(this, cardsCount)
 
-    fun showDetails(item: CardUi) {
-        detailsCommunication.put(item)
-        navigationCommunication.put(Navigation.Replace(Screen.CardDetailsFragment))
-    }
+    override fun showDetails(card: CardUi) = cardsCommunication.showDetails(card)
+    override fun observeState(owner: LifecycleOwner, observe: Observer<CardUiState>) =
+        cardsCommunication.observeState(owner, observe)
 
-    fun observeState(owner: LifecycleOwner, observe: Observer<CardUiState>) {
-        cardsUiStateCommunication.observe(owner, observe)
-    }
-
-    fun observeProgress(owner: LifecycleOwner, observer: Observer<Int>) {
-        progressCommunication.observe(owner, observer)
-    }
+    override fun observeProgress(owner: LifecycleOwner, observer: Observer<Int>) =
+        cardsCommunication.observeProgress(owner, observer)
 }
 
-class CardResultMapper : CardsResult.Mapper<CardUiState> {
-
-    override fun map(errorMessage: String): CardUiState {
-        return CardUiState.Fail(errorMessage)
-    }
-
-    override fun map(list: List<CardDomain>): CardUiState {
-        return CardUiState.Success(list.map {
-            it.map(CardDomain.Mapper.CardDomainToUi())
-        })
-    }
-}
-
-interface CardsUiStateCommunication : Communication.Mutable<CardUiState> {
-    class Base : Communication.Ui<CardUiState>(), CardsUiStateCommunication
-}
-
-interface ProgressCommunication : Communication.Mutable<Int> {
-    class Base : Communication.Ui<Int>(), ProgressCommunication
+interface CardDetails {
+    fun showDetails(card: CardUi)
 }

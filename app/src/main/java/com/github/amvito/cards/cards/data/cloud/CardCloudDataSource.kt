@@ -9,10 +9,14 @@ interface CardCloudDataSource {
     ) : CardCloudDataSource {
         override suspend fun getCards(countCards: Int): List<CardCloud> {
             val response = cardService.getCards(countCards)
-            val data = response.data.map {
-                CardCloud(it.expiration, it.number, it.owner, it.type)
+            if (response.code() == 200) {
+                return response.body()?.data?.map {
+                    CardCloud(it.expiration, it.number, it.owner, it.type)
+                }!!
             }
-            return data
+            throw ResourceNotFound()
         }
     }
 }
+
+class ResourceNotFound() : Exception()

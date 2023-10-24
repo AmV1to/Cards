@@ -7,15 +7,15 @@ import com.github.amvito.cards.cards.domain.CardsInteractor
 import com.github.amvito.cards.cards.domain.CardsResult
 import com.github.amvito.cards.cards.presentation.CardUi
 import com.github.amvito.cards.cards.presentation.CardUiState
+import com.github.amvito.cards.cards.presentation.CardsCommunication
 import com.github.amvito.cards.cards.presentation.CardsUiStateCommunication
 import com.github.amvito.cards.cards.presentation.CardsViewModel
+import com.github.amvito.cards.cards.presentation.HandleFetchCards
 import com.github.amvito.cards.cards.presentation.ProgressCommunication
-import com.github.amvito.cards.core.Communication
 import com.github.amvito.cards.core.Navigation
 import com.github.amvito.cards.core.NavigationCommunication
-import com.github.amvito.cards.core.RunAsync
+import com.github.amvito.cards.details.presentation.CardUiCommunication
 import junit.framework.TestCase.assertEquals
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -28,6 +28,7 @@ class CardsViewModelTest : BaseTest() {
     private lateinit var uiStateCommunication: FakeCardsStateUiCommunication
     private lateinit var fakeNavigation: FakeNavigation
     private lateinit var fakeDetails: FakeDetails
+    private lateinit var handleFetchCards: HandleFetchCards
 
     @Before
     fun init() {
@@ -36,71 +37,110 @@ class CardsViewModelTest : BaseTest() {
         uiStateCommunication = FakeCardsStateUiCommunication()
         fakeNavigation = FakeNavigation()
         fakeDetails = FakeDetails()
-        viewModel = CardsViewModel(
-            FakeRunAsync(),
+        val cardsCommunication = CardsCommunication.Base(
             progressCommunication,
-            fakeInteractor,
             uiStateCommunication,
-            navigationCommunication = fakeNavigation,
-            detailsCommunication = fakeDetails
+            fakeDetails,
+            fakeNavigation
+        )
+        handleFetchCards = HandleFetchCards.Base(
+            cardsInteractor = fakeInteractor,
+            cardsCommunication = cardsCommunication,
+        )
+        viewModel = CardsViewModel(
+            runAsync = FakeRunAsync(),
+            handleFetchCards = handleFetchCards,
+            cardsCommunication
         )
     }
 
     @Test
     fun test_init_first_run_success() = runBlocking {
-        // init
-        // show progress
-        // get data
-        // hide progress
-        // show data
-        // if we have a error
-        // show success result
-        // show success state
-        fakeInteractor.changeResult(CardsResult.Success(listOf(CardDomain("a", "a", "a", "a"))))
+        fakeInteractor.changeResult(
+            CardsResult.Success(
+                listOf(
+                    CardDomain(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            )
+        )
         viewModel.fetchCards(1)
 
         assertEquals(2, progressCommunication.calledCount)
         // get success result
 
         assertEquals(
-            CardsResult.Success(listOf(CardDomain("a", "a", "a", "a"))),
+            CardsResult.Success(
+                listOf(
+                    CardDomain(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            ),
             fakeInteractor.takeCards(),
         )
 
         // get success state
         assertEquals(
-            CardUiState.Success(listOf(CardUi("a", "a", "a", "a"))),
+            CardUiState.Success(
+                listOf(
+                    CardUi(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            ),
             uiStateCommunication.listOfState[0],
         )
 
-        assertEquals(1, uiStateCommunication.calledCount)
+        assertEquals(1, uiStateCommunication.listOfState.size)
 
     }
 
     @Test
-    fun test_init_first_run_fail() = runBlocking {
-        fakeInteractor.changeResult(CardsResult.Fail("exception"))
+    fun test_init_first_run_fail_no_internet_connection() = runBlocking {
+        fakeInteractor.changeResult(CardsResult.Fail("No internet connection"))
         viewModel.fetchCards(1)
 
 
         assertEquals(
-            CardsResult.Fail("exception"),
+            CardsResult.Fail("No internet connection"),
             fakeInteractor.takeCards(),
         )
 
         assertEquals(2, progressCommunication.calledCount)
 
         assertEquals(
-            CardUiState.Fail("exception"),
+            CardUiState.Fail("No internet connection"),
             uiStateCommunication.listOfState[0],
         )
 
-        assertEquals(1, uiStateCommunication.calledCount)
+        assertEquals(1, uiStateCommunication.listOfState.size)
     }
 
     @Test
     fun test_try_again_button_success() = runBlocking {
-        fakeInteractor.changeResult(CardsResult.Success(listOf(CardDomain("a", "a", "a", "a"))))
+        fakeInteractor.changeResult(
+            CardsResult.Success(
+                listOf(
+                    CardDomain(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            )
+        )
         viewModel.tryAgain(1)
 
 
@@ -108,44 +148,62 @@ class CardsViewModelTest : BaseTest() {
 
 
         assertEquals(
-            CardsResult.Success(listOf(CardDomain("a", "a", "a", "a"))),
+            CardsResult.Success(
+                listOf(
+                    CardDomain(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            ),
             fakeInteractor.takeCards(),
         )
 
         assertEquals(
-            CardUiState.Success(listOf(CardUi("a", "a", "a", "a"))),
+            CardUiState.Success(
+                listOf(
+                    CardUi(
+                        "MasterCard",
+                        "2405579232388124",
+                        "04/26",
+                        "Al Bernhard"
+                    )
+                )
+            ),
             uiStateCommunication.listOfState[0],
         )
 
-        assertEquals(1, uiStateCommunication.calledCount)
+        assertEquals(1, uiStateCommunication.listOfState.size)
 
     }
 
     @Test
     fun test_try_again_button_fail() = runBlocking {
-        fakeInteractor.changeResult(CardsResult.Fail("exception"))
+        fakeInteractor.changeResult(CardsResult.Fail("No internet connection"))
         viewModel.tryAgain(1)
 
 
         assertEquals(
-            CardsResult.Fail("exception"),
+            CardsResult.Fail("No internet connection"),
             fakeInteractor.takeCards(),
         )
 
         assertEquals(2, progressCommunication.calledCount)
 
         assertEquals(
-            CardUiState.Fail("exception"),
+            CardUiState.Fail("No internet connection"),
             uiStateCommunication.listOfState[0],
         )
 
-        assertEquals(1, uiStateCommunication.calledCount)
+        assertEquals(1, uiStateCommunication.listOfState.size)
 
     }
 
     @Test
     fun test_show_details() {
-        val cardUi = CardUi("a", "a", "a", "a")
+        val cardUi = CardUi("MasterCard", "2405579232388124", "04/26", "Al Bernhard")
 
         viewModel.showDetails(cardUi)
         assertEquals(1, fakeDetails.calledCount)
@@ -157,14 +215,12 @@ class CardsViewModelTest : BaseTest() {
 
 private class FakeCardsStateUiCommunication : CardsUiStateCommunication {
 
-    var calledCount = 0
     val listOfState = mutableListOf<CardUiState>()
 
     override fun observe(owner: LifecycleOwner, observer: Observer<CardUiState>) = Unit
 
     override fun put(source: CardUiState) {
         listOfState.add(source)
-        calledCount++
     }
 
 }
@@ -212,29 +268,15 @@ private class FakeNavigation : NavigationCommunication.Mutable {
 
 }
 
-private class FakeDetails : Communication.Mutable<CardUi> {
+private class FakeDetails : CardUiCommunication {
     var calledCount = 0
     var card: CardUi? = null
 
-    override fun observe(owner: LifecycleOwner, observer: Observer<CardUi>) {
-    }
+    override fun observe(owner: LifecycleOwner, observer: Observer<CardUi>) = Unit
 
     override fun put(source: CardUi) {
         calledCount++
         card = source
     }
 
-}
-
-abstract class BaseTest {
-
-    protected class FakeRunAsync : RunAsync {
-        override fun <T : Any> runAsync(
-            scope: CoroutineScope,
-            block: suspend () -> T,
-            ui: (T) -> Unit
-        ) = runBlocking {
-            block.invoke().let { ui.invoke(it) }
-        }
-    }
 }

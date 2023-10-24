@@ -6,54 +6,40 @@ import com.github.amvito.cards.databinding.CardFragmentBinding
 
 interface CardUiState {
 
-    interface Mapper<T> {
+    fun apply(
+        binding: CardFragmentBinding,
+        update: Update<List<CardUi>>
+    )
 
-        fun map(list: List<CardUi>): T
-        fun map(message: String): T
-
-        class CardUiStateMapper(
-            private val update: Update<List<CardUi>>,
-            private val binding: CardFragmentBinding,
-        ) : Mapper<Unit> {
-            override fun map(list: List<CardUi>) {
-                with(binding) {
-                    exceptionLayout.visibility = View.GONE
-                    editTextLayout.visibility = View.VISIBLE
-                    fetchButton.visibility = View.VISIBLE
-                    recyclerView.visibility = View.VISIBLE
-                }
-                update.update(list)
-            }
-
-            override fun map(message: String) {
-                with(binding) {
-                    exceptionLayout.visibility = View.VISIBLE
-                    editTextLayout.visibility = View.GONE
-                    fetchButton.visibility = View.GONE
-                    recyclerView.visibility = View.GONE
-                    exceptionMessage.text = message
-                }
+    abstract class Abstract(
+        private val visibilityException: Int,
+        private val visibilitySuccess: Int,
+    ) : CardUiState {
+        override fun apply(binding: CardFragmentBinding, update: Update<List<CardUi>>) {
+            with(binding) {
+                exceptionLayout.visibility = visibilityException
+                editTextLayout.visibility = visibilitySuccess
+                fetchButton.visibility = visibilitySuccess
+                recyclerView.visibility = visibilitySuccess
             }
         }
-
     }
-
-    fun <T : Any> map(mapper: Mapper<T>): T
 
     data class Success(
         private val list: List<CardUi>
-    ) : CardUiState {
-        override fun <T : Any> map(mapper: Mapper<T>): T {
-            return mapper.map(list)
+    ) : Abstract(View.GONE, View.VISIBLE) {
+        override fun apply(binding: CardFragmentBinding, update: Update<List<CardUi>>) {
+            super.apply(binding, update)
+            update.update(list)
         }
     }
 
     data class Fail(
         private val errorMessage: String
-    ) : CardUiState {
-        override fun <T : Any> map(mapper: Mapper<T>): T {
-            return mapper.map(errorMessage)
+    ) : Abstract(View.VISIBLE, View.GONE) {
+        override fun apply(binding: CardFragmentBinding, update: Update<List<CardUi>>) {
+            super.apply(binding, update)
+            binding.exceptionMessage.text = errorMessage
         }
     }
-
 }
