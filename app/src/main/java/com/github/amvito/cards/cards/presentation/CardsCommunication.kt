@@ -15,8 +15,8 @@ interface CardsCommunication : ObserveCards, CardDetails {
     class Base(
         private val progressCommunication: ProgressCommunication,
         private val cardsUiStateCommunication: CardsUiStateCommunication,
-        private val detailsCommunication: CardUiCommunication,
-        private val navigationCommunication: NavigationCommunication.Mutable
+        private val detailsCommunication: CardUiCommunication.Put,
+        private val navigationCommunication: NavigationCommunication.Put
     ) : CardsCommunication {
         override fun observeState(owner: LifecycleOwner, observe: Observer<CardUiState>) =
             cardsUiStateCommunication.observe(owner, observe)

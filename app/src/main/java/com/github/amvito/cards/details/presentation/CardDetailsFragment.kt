@@ -24,6 +24,11 @@ class CardDetailsFragment : BaseFragment() {
     }
 }
 
-interface CardUiCommunication : Communication.Mutable<CardUi> {
-    class Base : Communication.Ui<CardUi>(), CardUiCommunication
+interface CardUiCommunication {
+
+    interface Put : Communication.Put<CardUi>
+    interface Observe : Communication.Observe<CardUi>
+    interface Mutable : Put, Observe, CardUiCommunication
+
+    class Base : Communication.Ui<CardUi>(), Mutable
 }

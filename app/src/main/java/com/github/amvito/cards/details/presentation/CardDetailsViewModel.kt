@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.github.amvito.cards.cards.presentation.CardUi
 
 class CardDetailsViewModel(
-    private val communication: CardUiCommunication,
+    private val communication: CardUiCommunication.Observe,
 ) : ViewModel() {
 
     fun observeCard(owner: LifecycleOwner, observer: Observer<CardUi>) {

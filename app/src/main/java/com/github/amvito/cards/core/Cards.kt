@@ -19,7 +19,7 @@ class Cards : Application() {
         startKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@Cards)
-            modules(listOf(mainDi, detailsDi, cardsModule, domainModule, dataModule))
+            modules(listOf(mainDi, detailsDi, cardsModule, domainModule, dataModule, navigationModule))
         }
     }
 }

@@ -6,6 +6,6 @@ import org.koin.dsl.module
 
 val mainDi = module {
     viewModel<MainViewModel> {
-        MainViewModel(get(named("navigationCommunication")))
+        MainViewModel(get(named("navigationCommunicationMutable")))
     }
 }
